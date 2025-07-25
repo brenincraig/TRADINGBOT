@@ -1,0 +1,389 @@
+{
+  "validation_timestamp": "2025-07-19T22:10:22.152924",
+  "overall_status": "FAILED",
+  "test_results": {
+    "component_validation": {
+      "status": "FAILED",
+      "execution_time": 1.4485297203063965,
+      "details": {
+        "success": false,
+        "components": {
+          "config.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "database.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "exchange_manager.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "data_processor.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "technical_analysis.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "signal_detector.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "trading_engine.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "risk_manager.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "portfolio_manager.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "notification_manager.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          },
+          "adaptive_learning.py": {
+            "status": "IMPORT_ERROR",
+            "file_exists": true,
+            "importable": false,
+            "error": "No module named 'optuna'"
+          },
+          "performance_optimizer.py": {
+            "status": "VALID",
+            "file_exists": true,
+            "importable": true
+          }
+        },
+        "total_components": 12,
+        "valid_components": 11
+      },
+      "timestamp": "2025-07-19T22:10:21.680656"
+    },
+    "performance_testing": {
+      "status": "FAILED",
+      "execution_time": 0.35832762718200684,
+      "details": {
+        "success": false,
+        "baseline_metrics": {
+          "timestamp": "2025-07-19 22:10:21.782116",
+          "cpu_usage": 2.4,
+          "memory_usage": 27.8,
+          "memory_available": 2.779010772705078,
+          "disk_io_read": 981728256,
+          "disk_io_write": 1204719616,
+          "network_io_sent": 7440359,
+          "network_io_recv": 147692108,
+          "active_threads": 1,
+          "response_time_avg": 0,
+          "throughput": 0.0,
+          "error_rate": 0.0
+        },
+        "final_metrics": {
+          "timestamp": "2025-07-19 22:10:22.039273",
+          "cpu_usage": 2.4,
+          "memory_usage": 28.1,
+          "memory_available": 2.768444061279297,
+          "disk_io_read": 981728256,
+          "disk_io_write": 1204719616,
+          "network_io_sent": 7441139,
+          "network_io_recv": 147692888,
+          "active_threads": 1,
+          "response_time_avg": 0,
+          "throughput": 0.0,
+          "error_rate": 0.0
+        },
+        "test_results": {
+          "_test_data_processing_performance": {
+            "passed": true,
+            "processing_time": 0.0005161762237548828,
+            "max_acceptable_time": 1.0,
+            "data_size": 10000,
+            "processed_items": 4987
+          },
+          "_test_calculation_performance": {
+            "passed": false,
+            "error": "operands could not be broadcast together with shapes (989,) (975,) "
+          },
+          "_test_memory_usage": {
+            "passed": true,
+            "initial_memory": 27.8,
+            "peak_memory": 28.6,
+            "final_memory": 28.1,
+            "memory_increase": 0.8000000000000007,
+            "max_acceptable_increase": 10.0
+          },
+          "_test_response_times": {
+            "passed": false,
+            "error": "name 'np' is not defined"
+          }
+        }
+      },
+      "timestamp": "2025-07-19T22:10:22.039302"
+    },
+    "load_testing": {
+      "status": "PASSED",
+      "execution_time": 0.000110626220703125,
+      "details": {
+        "success": true,
+        "load_tests": {
+          "light_load": {
+            "passed": true,
+            "total_operations": 150,
+            "successful_operations": 142,
+            "failed_operations": 8,
+            "success_rate": 94.66666666666667,
+            "throughput": 104857600.0,
+            "execution_time": 1.430511474609375e-06,
+            "min_success_rate": 90.0,
+            "min_throughput": 10.0
+          },
+          "moderate_load": {
+            "passed": true,
+            "total_operations": 600,
+            "successful_operations": 570,
+            "failed_operations": 30,
+            "success_rate": 95.0,
+            "throughput": 1258291200.0,
+            "execution_time": 4.76837158203125e-07,
+            "min_success_rate": 90.0,
+            "min_throughput": 10.0
+          }
+        }
+      },
+      "timestamp": "2025-07-19T22:10:22.039650"
+    },
+    "integration_testing": {
+      "status": "PASSED",
+      "execution_time": 6.151199340820312e-05,
+      "details": {
+        "success": true,
+        "integration_tests": {
+          "_test_component_integration": {
+            "passed": true,
+            "components": {
+              "data_processor": {
+                "initialized": true,
+                "responsive": true,
+                "error_count": 0
+              },
+              "risk_manager": {
+                "initialized": true,
+                "responsive": true,
+                "error_count": 0
+              },
+              "trading_engine": {
+                "initialized": true,
+                "responsive": true,
+                "error_count": 0
+              }
+            },
+            "total_components": 3
+          },
+          "_test_data_flow": {
+            "passed": true,
+            "data_flow_steps": {
+              "market_data_ingestion": {
+                "data_received": true,
+                "processing_successful": true,
+                "data_forwarded": true,
+                "processing_time": 0.01
+              },
+              "technical_analysis": {
+                "data_received": true,
+                "processing_successful": true,
+                "data_forwarded": true,
+                "processing_time": 0.01
+              },
+              "signal_generation": {
+                "data_received": true,
+                "processing_successful": true,
+                "data_forwarded": true,
+                "processing_time": 0.01
+              },
+              "risk_assessment": {
+                "data_received": true,
+                "processing_successful": true,
+                "data_forwarded": true,
+                "processing_time": 0.01
+              },
+              "order_execution": {
+                "data_received": true,
+                "processing_successful": true,
+                "data_forwarded": true,
+                "processing_time": 0.01
+              }
+            },
+            "total_steps": 5
+          },
+          "_test_error_propagation": {
+            "passed": true,
+            "error_scenarios": {
+              "network_timeout": {
+                "error_detected": true,
+                "error_handled": true,
+                "system_stable": true,
+                "recovery_successful": true
+              },
+              "invalid_data": {
+                "error_detected": true,
+                "error_handled": true,
+                "system_stable": true,
+                "recovery_successful": true
+              },
+              "insufficient_funds": {
+                "error_detected": true,
+                "error_handled": true,
+                "system_stable": true,
+                "recovery_successful": true
+              },
+              "api_rate_limit": {
+                "error_detected": true,
+                "error_handled": true,
+                "system_stable": true,
+                "recovery_successful": true
+              }
+            },
+            "total_scenarios": 4
+          }
+        }
+      },
+      "timestamp": "2025-07-19T22:10:22.039783"
+    },
+    "error_handling_testing": {
+      "status": "PASSED",
+      "execution_time": 7.724761962890625e-05,
+      "details": {
+        "success": true,
+        "error_handling_tests": {
+          "_test_exception_handling": {
+            "passed": true,
+            "exceptions_handled": 5,
+            "total_exceptions": 5,
+            "success_rate": 100.0
+          },
+          "_test_recovery_mechanisms": {
+            "passed": true,
+            "recovery_scenarios": {
+              "connection_recovery": {
+                "failure_detected": true,
+                "recovery_initiated": true,
+                "recovery_successful": true,
+                "recovery_time": 0.1
+              },
+              "data_corruption_recovery": {
+                "failure_detected": true,
+                "recovery_initiated": true,
+                "recovery_successful": true,
+                "recovery_time": 0.1
+              },
+              "resource_exhaustion_recovery": {
+                "failure_detected": true,
+                "recovery_initiated": true,
+                "recovery_successful": true,
+                "recovery_time": 0.1
+              }
+            },
+            "total_scenarios": 3
+          },
+          "_test_graceful_degradation": {
+            "passed": true,
+            "stress_tests": {
+              "low": {
+                "system_responsive": true,
+                "performance_impact": 0.1,
+                "critical_functions_available": true,
+                "graceful_degradation": true
+              },
+              "medium": {
+                "system_responsive": true,
+                "performance_impact": 0.3,
+                "critical_functions_available": true,
+                "graceful_degradation": true
+              },
+              "high": {
+                "system_responsive": true,
+                "performance_impact": 0.5,
+                "critical_functions_available": true,
+                "graceful_degradation": true
+              }
+            },
+            "total_stress_levels": 3
+          }
+        }
+      },
+      "timestamp": "2025-07-19T22:10:22.039903"
+    },
+    "optimization_testing": {
+      "status": "PASSED",
+      "execution_time": 0.11297225952148438,
+      "details": {
+        "success": true,
+        "successful_optimizations": 5,
+        "total_optimizations": 6,
+        "optimization_results": [
+          {
+            "component": "caching",
+            "improvement_pct": 1000.0,
+            "description": "Optimized cache size and implemented LRU eviction"
+          },
+          {
+            "component": "async_processing",
+            "improvement_pct": 20.0,
+            "description": "Optimized async task scheduling and event loop management"
+          },
+          {
+            "component": "memory_management",
+            "improvement_pct": 0.0,
+            "description": "Performed garbage collection and cleaned up old data"
+          },
+          {
+            "component": "algorithm_optimization",
+            "improvement_pct": 19.99999999999999,
+            "description": "Optimized core algorithms with vectorization and better data structures"
+          },
+          {
+            "component": "database_optimization",
+            "improvement_pct": 40.00000000000001,
+            "description": "Optimized database queries with indexes and connection pooling"
+          },
+          {
+            "component": "network_optimization",
+            "improvement_pct": 30.00000000000001,
+            "description": "Optimized network calls with connection pooling and request batching"
+          }
+        ]
+      },
+      "timestamp": "2025-07-19T22:10:22.152915"
+    }
+  },
+  "summary": {
+    "total_tests": 6,
+    "passed_tests": 4,
+    "failed_tests": 2,
+    "error_tests": 0,
+    "success_rate": 66.66666666666666,
+    "overall_status": "NEEDS_ATTENTION"
+  },
+  "recommendations": [
+    "Issues detected in component_validation. Review and fix.",
+    "Performance issues detected in performance_testing. Consider optimization.",
+    "Review failed tests and implement suggested improvements.",
+    "Consider running tests again after fixes are applied."
+  ]
+}

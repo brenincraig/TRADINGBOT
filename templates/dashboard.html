@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trading Bot Dashboard</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-running { color: #10b981; }
+        .status-stopped { color: #ef4444; }
+        .status-partial { color: #f59e0b; }
+        .profit { color: #10b981; }
+        .loss { color: #ef4444; }
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <i class="fas fa-robot text-2xl text-blue-600 mr-3"></i>
+                    <h1 class="text-2xl font-bold text-gray-900">Crypto Trading Bot</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <div id="status-indicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                        <span id="system-status" class="text-sm font-medium">Loading...</span>
+                    </div>
+                    <button id="emergency-stop" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-stop mr-1"></i> Emergency Stop
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="card bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-dollar-sign text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total P&L</p>
+                        <p id="total-pnl" class="text-2xl font-bold text-gray-900">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-chart-line text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Win Rate</p>
+                        <p id="win-rate" class="text-2xl font-bold text-gray-900">0%</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-coins text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Active Positions</p>
+                        <p id="active-positions" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Drawdown</p>
+                        <p id="drawdown" class="text-2xl font-bold text-gray-900">0%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Tables Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Performance Chart -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Performance Chart</h3>
+                <canvas id="performance-chart" width="400" height="200"></canvas>
+            </div>
+
+            <!-- Current Positions -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Positions</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">P&L</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-table" class="bg-white divide-y divide-gray-200">
+                            <!-- Positions will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Recent Trades -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Trades</h3>
+                <div class="space-y-3" id="recent-trades">
+                    <!-- Recent trades will be populated here -->
+                </div>
+            </div>
+
+            <!-- System Alerts -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">System Alerts</h3>
+                <div class="space-y-3" id="system-alerts">
+                    <!-- System alerts will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- System Metrics -->
+        <div class="mt-8">
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">System Metrics</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-2">CPU Usage</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="cpu-usage" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="cpu-percentage" class="text-xs text-gray-500 mt-1">0%</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-2">Memory Usage</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="memory-usage" class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="memory-percentage" class="text-xs text-gray-500 mt-1">0%</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-2">API Response Time</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="api-response" class="bg-yellow-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="api-time" class="text-xs text-gray-500 mt-1">0ms</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Socket.IO connection
+        const socket = io();
+        
+        // Chart initialization
+        const ctx = document.getElementById('performance-chart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Portfolio Value',
+                    data: [],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+
+        // Socket event handlers
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            updateConnectionStatus(true);
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+            updateConnectionStatus(false);
+        });
+
+        socket.on('system_status', function(data) {
+            updateSystemStatus(data);
+        });
+
+        socket.on('trading_metrics', function(data) {
+            updateTradingMetrics(data);
+        });
+
+        socket.on('current_positions', function(data) {
+            updatePositionsTable(data);
+        });
+
+        socket.on('new_trade', function(data) {
+            addRecentTrade(data);
+        });
+
+        socket.on('new_alert', function(data) {
+            addSystemAlert(data);
+        });
+
+        socket.on('price_update', function(data) {
+            updatePrices(data);
+        });
+
+        // Update functions
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('status-indicator');
+            const status = document.getElementById('system-status');
+            
+            if (connected) {
+                indicator.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+                status.textContent = 'Connected';
+            } else {
+                indicator.className = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+                status.textContent = 'Disconnected';
+            }
+        }
+
+        function updateSystemStatus(data) {
+            const statusElement = document.getElementById('system-status');
+            const indicator = document.getElementById('status-indicator');
+            
+            let statusClass = 'status-stopped';
+            let indicatorClass = 'w-3 h-3 rounded-full bg-red-500 mr-2';
+            
+            if (data.status === 'running') {
+                statusClass = 'status-running';
+                indicatorClass = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+            } else if (data.status === 'partial') {
+                statusClass = 'status-partial';
+                indicatorClass = 'w-3 h-3 rounded-full bg-yellow-500 mr-2';
+            }
+            
+            statusElement.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+            statusElement.className = `text-sm font-medium ${statusClass}`;
+            indicator.className = indicatorClass;
+        }
+
+        function updateTradingMetrics(data) {
+            // Update overview cards
+            document.getElementById('total-pnl').textContent = `$${data.total_pnl?.toFixed(2) || '0.00'}`;
+            document.getElementById('win-rate').textContent = `${(data.win_rate * 100)?.toFixed(1) || '0'}%`;
+            document.getElementById('active-positions').textContent = data.current_positions || '0';
+            document.getElementById('drawdown').textContent = `${(data.drawdown * 100)?.toFixed(1) || '0'}%`;
+            
+            // Update chart (simplified)
+            const now = new Date();
+            performanceChart.data.labels.push(now.toLocaleTimeString());
+            performanceChart.data.datasets[0].data.push(data.total_pnl || 0);
+            
+            // Keep only last 20 data points
+            if (performanceChart.data.labels.length > 20) {
+                performanceChart.data.labels.shift();
+                performanceChart.data.datasets[0].data.shift();
+            }
+            
+            performanceChart.update();
+        }
+
+        function updatePositionsTable(positions) {
+            const tbody = document.getElementById('positions-table');
+            tbody.innerHTML = '';
+            
+            positions.forEach(position => {
+                const row = document.createElement('tr');
+                const pnlClass = position.unrealized_pnl >= 0 ? 'profit' : 'loss';
+                
+                row.innerHTML = `
+                    <td class="px-4 py-2 text-sm font-medium text-gray-900">${position.symbol}</td>
+                    <td class="px-4 py-2 text-sm text-gray-500">${position.type}</td>
+                    <td class="px-4 py-2 text-sm ${pnlClass}">
+                        $${position.unrealized_pnl.toFixed(2)} (${(position.unrealized_pnl_pct * 100).toFixed(2)}%)
+                    </td>
+                    <td class="px-4 py-2 text-sm">
+                        <button onclick="closePosition('${position.symbol}')" 
+                                class="text-red-600 hover:text-red-900 text-xs">
+                            Close
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            if (positions.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="4" class="px-4 py-2 text-sm text-gray-500 text-center">
+                        No active positions
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        function addRecentTrade(trade) {
+            const container = document.getElementById('recent-trades');
+            const tradeElement = document.createElement('div');
+            const pnlClass = trade.realized_pnl >= 0 ? 'profit' : 'loss';
+            
+            tradeElement.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+            tradeElement.innerHTML = `
+                <div>
+                    <p class="text-sm font-medium text-gray-900">${trade.symbol}</p>
+                    <p class="text-xs text-gray-500">${trade.position_type} • ${new Date(trade.timestamp).toLocaleTimeString()}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-medium ${pnlClass}">$${trade.realized_pnl?.toFixed(2) || '0.00'}</p>
+                    <p class="text-xs text-gray-500">${trade.reason || 'Manual'}</p>
+                </div>
+            `;
+            
+            container.insertBefore(tradeElement, container.firstChild);
+            
+            // Keep only last 10 trades
+            while (container.children.length > 10) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function addSystemAlert(alert) {
+            const container = document.getElementById('system-alerts');
+            const alertElement = document.createElement('div');
+            
+            let alertClass = 'bg-blue-50 border-blue-200';
+            let iconClass = 'text-blue-600';
+            
+            if (alert.level === 'warning') {
+                alertClass = 'bg-yellow-50 border-yellow-200';
+                iconClass = 'text-yellow-600';
+            } else if (alert.level === 'error' || alert.level === 'critical') {
+                alertClass = 'bg-red-50 border-red-200';
+                iconClass = 'text-red-600';
+            }
+            
+            alertElement.className = `p-3 border rounded-lg ${alertClass}`;
+            alertElement.innerHTML = `
+                <div class="flex">
+                    <i class="fas fa-exclamation-triangle ${iconClass} mr-2 mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">${alert.title}</p>
+                        <p class="text-xs text-gray-600 mt-1">${alert.message}</p>
+                        <p class="text-xs text-gray-500 mt-1">${new Date(alert.timestamp).toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+            
+            container.insertBefore(alertElement, container.firstChild);
+            
+            // Keep only last 10 alerts
+            while (container.children.length > 10) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function updatePrices(prices) {
+            // Update price displays if needed
+            console.log('Price update:', prices);
+        }
+
+        // Control functions
+        function closePosition(symbol) {
+            if (confirm(`Are you sure you want to close the ${symbol} position?`)) {
+                fetch('/api/control/close_position', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ symbol: symbol })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        }
+
+        // Emergency stop
+        document.getElementById('emergency-stop').addEventListener('click', function() {
+            if (confirm('Are you sure you want to activate emergency stop? This will close all positions and stop trading.')) {
+                fetch('/api/control/emergency_stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                });
+            }
+        });
+
+        // Periodic updates
+        setInterval(() => {
+            socket.emit('request_update', { type: 'all' });
+        }, 5000);
+
+        // Load system metrics
+        function loadSystemMetrics() {
+            fetch('/api/metrics/system')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.cpu_usage !== undefined) {
+                        document.getElementById('cpu-usage').style.width = `${data.cpu_usage}%`;
+                        document.getElementById('cpu-percentage').textContent = `${data.cpu_usage.toFixed(1)}%`;
+                    }
+                    
+                    if (data.memory_usage !== undefined) {
+                        document.getElementById('memory-usage').style.width = `${data.memory_usage}%`;
+                        document.getElementById('memory-percentage').textContent = `${data.memory_usage.toFixed(1)}%`;
+                    }
+                    
+                    if (data.api_response_time !== undefined) {
+                        const responseTime = data.api_response_time * 1000; // Convert to ms
+                        const maxTime = 1000; // 1 second max for display
+                        const percentage = Math.min((responseTime / maxTime) * 100, 100);
+                        document.getElementById('api-response').style.width = `${percentage}%`;
+                        document.getElementById('api-time').textContent = `${responseTime.toFixed(0)}ms`;
+                    }
+                });
+        }
+
+        // Load system metrics every 10 seconds
+        setInterval(loadSystemMetrics, 10000);
+        loadSystemMetrics(); // Initial load
+    </script>
+</body>
+</html>
+
